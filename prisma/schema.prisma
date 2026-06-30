@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String       @id @default(cuid())
+  name          String?
+  email         String?      @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  repositories  Repository[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Account {
+  id                        String  @id @default(cuid())
+  userId                    String
+  type                      String
+  provider                  String
+  providerAccountId         String
+  refresh_token             String? @db.Text
+  access_token              String? @db.Text
+  expires_at                Int?
+  token_type                String?
+  scope                     String?
+  id_token                  String? @db.Text
+  session_state             String?
+  refresh_token_expires_in  Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Repository {
+  id              String       @id @default(cuid())
+  githubId        Int          @unique
+  name            String
+  fullName        String
+  installationId  Int?         // If using GitHub App
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rules           Rule[]
+  events          EventLog[]
+}
+
+model Rule {
+  id              String     @id @default(cuid())
+  repositoryId    String
+  repository      Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  eventType       String     // e.g., 'issues', 'pull_request'
+  conditionField  String?    // e.g., 'title'
+  conditionValue  String?    // e.g., 'bug'
+  actionType      String     // e.g., 'add_label', 'slack_notify'
+  actionTarget    String?    // e.g., 'bug', '#engineering'
+  isActive        Boolean    @default(true)
+}
+
+model EventLog {
+  id              String      @id @default(cuid())
+  deliveryId      String      @unique // X-GitHub-Delivery for idempotency
+  repositoryId    String?
+  repository      Repository? @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  eventType       String      // e.g., 'issues.opened'
+  payload         Json
+  status          String      // 'PENDING', 'PROCESSED', 'FAILED'
+  error           String?
+  createdAt       DateTime    @default(now())
+  processedAt     DateTime?
+  actions         ActionLog[]
+}
+
+model ActionLog {
+  id              String   @id @default(cuid())
+  eventId         String
+  event           EventLog @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  actionType      String   // 'github_comment', 'slack_message', 'ai_summary'
+  details         String   // Description of what was done
+  status          String   // 'SUCCESS', 'FAILED'
+  createdAt       DateTime @default(now())
+}
