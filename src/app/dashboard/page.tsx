@@ -355,6 +355,21 @@ export default async function Dashboard() {
           </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="py-8 px-6 mt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="max-w-7xl mx-auto flex flex-col items-center gap-2">
+          <div className="w-20 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.5), transparent)' }} />
+          <p className="text-sm font-medium mt-2" style={{ color: '#334155' }}>
+            Crafted with{' '}
+            <span className="animate-pulse inline-block" style={{ background: 'linear-gradient(135deg, #f43f5e, #ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 700 }}>♥</span>
+            {' '}by{' '}
+            <a href="https://github.com/Ojhanaveen" target="_blank" rel="noopener noreferrer" className="font-bold hover:opacity-80 transition-opacity" style={{ background: 'linear-gradient(135deg, #a5b4fc, #c4b5fd)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              Naveen Kumar
+            </a>
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

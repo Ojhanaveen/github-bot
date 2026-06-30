@@ -232,8 +232,35 @@ export default async function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="text-center py-10 text-xs text-slate-600" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-        Built with Next.js, Prisma, NextAuth & Gemini AI · Open Source on GitHub
+      <footer className="py-12 px-6" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div className="max-w-4xl mx-auto flex flex-col items-center gap-4">
+          {/* Divider glow */}
+          <div className="w-24 h-px mb-2" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.6), transparent)' }} />
+
+          <p className="text-sm font-medium tracking-wide" style={{ color: '#475569' }}>
+            Crafted with{' '}
+            <span
+              className="inline-block animate-pulse"
+              style={{ background: 'linear-gradient(135deg, #f43f5e, #ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 700 }}
+            >
+              ♥
+            </span>
+            {' '}by{' '}
+            <a
+              href="https://github.com/Ojhanaveen"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold transition-all duration-300 hover:opacity-80"
+              style={{ background: 'linear-gradient(135deg, #a5b4fc, #c4b5fd)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+            >
+              Naveen Kumar
+            </a>
+          </p>
+
+          <p className="text-xs" style={{ color: '#1e293b' }}>
+            Built with Next.js · Prisma · NextAuth · Gemini AI
+          </p>
+        </div>
       </footer>
     </main>
   );
