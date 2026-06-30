@@ -98,8 +98,8 @@ export async function POST(req: Request) {
       throw dbError;
     }
 
-    // 3. Trigger processing asynchronously (fire and forget)
-    processEventBackground(newEvent.id).catch(err => console.error("Background processing failed", err));
+    // 3. Trigger processing synchronously so Vercel doesn't kill the serverless function
+    await processEventBackground(newEvent.id);
 
     return NextResponse.json({ message: 'Event received' }, { status: 202 });
 
