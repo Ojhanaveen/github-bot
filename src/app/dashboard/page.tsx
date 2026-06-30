@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { FaCheckCircle, FaTimesCircle, FaClock, FaGithub, FaRobot, FaSlack, FaBolt, FaExternalLinkAlt, FaCode } from "react-icons/fa";
+import { FaCheckCircle, FaTimesCircle, FaClock, FaGithub, FaRobot, FaSlack, FaBolt, FaExternalLinkAlt, FaCode, FaDownload, FaArrowRight } from "react-icons/fa";
 import { LogoutButton } from "@/components/LogoutButton";
 
 export const dynamic = 'force-dynamic';
@@ -29,6 +29,7 @@ export default async function Dashboard() {
 
   const slackConfigured = !!process.env.SLACK_WEBHOOK_URL;
   const geminiConfigured = !!process.env.GEMINI_API_KEY;
+  const GITHUB_APP_INSTALL_URL = 'https://github.com/apps/git-automation-bot-naveen';
 
   return (
     <div className="min-h-screen text-slate-200" style={{ background: 'linear-gradient(135deg, #0a0f1e 0%, #0d1117 50%, #0a0f1e 100%)' }}>
@@ -86,6 +87,43 @@ export default async function Dashboard() {
             </div>
           ))}
         </div>
+
+        {/* ── GitHub App Install Banner (shown when no repos connected) ── */}
+        {repos.length === 0 && (
+          <div className="relative overflow-hidden rounded-2xl p-6" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%)', border: '1px solid rgba(99,102,241,0.35)' }}>
+            {/* Glow */}
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.3) 0%, transparent 70%)', filter: 'blur(30px)' }} />
+            <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-xl flex-shrink-0" style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.4)' }}>
+                  <FaDownload className="w-6 h-6 text-indigo-300" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-bold uppercase tracking-widest text-indigo-400">Action Required</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' }}>Not Installed</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Install the GitHub App on your account</h3>
+                  <p className="text-sm text-slate-400 mt-1 max-w-xl leading-relaxed">
+                    To start receiving events, you must install the <strong className="text-indigo-300">Git Automation Bot</strong> GitHub App on your account or organization. This grants it permission to send webhooks to this dashboard whenever issues or pull requests are opened.
+                  </p>
+                  <p className="text-xs text-slate-500 mt-2">After installing, come back here — your repositories will appear automatically within seconds.</p>
+                </div>
+              </div>
+              <a
+                href={GITHUB_APP_INSTALL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-200 hover:scale-105 flex-shrink-0 whitespace-nowrap"
+                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', boxShadow: '0 0 20px rgba(99,102,241,0.4)' }}
+              >
+                <FaGithub className="w-4 h-4" />
+                Install GitHub App
+                <FaArrowRight className="w-3 h-3" />
+              </a>
+            </div>
+          </div>
+        )}
 
         <div className="grid md:grid-cols-3 gap-6">
           {/* Activity Log — 2/3 width */}
@@ -253,13 +291,23 @@ export default async function Dashboard() {
 
             {/* Connected Repos */}
             <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(13,17,23,0.8)', border: '1px solid rgba(99,102,241,0.15)' }}>
-              <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <div>
+              <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="flex items-center justify-between mb-1">
                   <h2 className="font-bold text-white text-sm flex items-center gap-2">
                     <FaGithub className="text-slate-400 w-4 h-4" /> Connected Repos
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">{repos.length} repositories</p>
+                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)' }}>{repos.length}</span>
                 </div>
+                <a
+                  href={GITHUB_APP_INSTALL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 flex items-center justify-center gap-2 w-full py-2 rounded-lg text-xs font-semibold transition-all duration-200 hover:scale-[1.02]"
+                  style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2))', border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc' }}
+                >
+                  <FaDownload className="w-3 h-3" />
+                  {repos.length === 0 ? 'Install App to Connect Repos' : '+ Install on More Accounts'}
+                </a>
               </div>
               <div className="p-4">
                 {repos.length === 0 ? (

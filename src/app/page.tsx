@@ -42,9 +42,16 @@ export default async function Home() {
     {
       step: "04",
       icon: FaPlug,
-      title: "Install Your GitHub App",
-      description: "Point your GitHub App's Webhook URL to your Vercel deployment. Install the app on any repo you want to monitor.",
-      code: "Webhook: https://your-app.vercel.app/api/webhooks/github",
+      title: "Install the GitHub App on Your Account",
+      description: (
+        <>
+          This is the most important step! Install the 'Git Automation Bot' app on your GitHub account or organization. Without this, GitHub cannot send webhooks to your bot.{" "}
+          <a href="https://github.com/apps/git-automation-bot-naveen" target="_blank" rel="noopener noreferrer" className="underline text-emerald-400">
+            Install Here
+          </a>
+        </>
+      ),
+      code: "→ github.com/apps/git-automation-bot-naveen",
       color: "#10b981",
       glow: "rgba(16,185,129,0.3)",
     },
