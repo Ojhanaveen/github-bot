@@ -84,23 +84,6 @@ See [`.env.example`](.env.example) for all required variables.
 | `GEMINI_API_KEY` | Google AI Studio API key |
 | `SLACK_WEBHOOK_URL` | Slack Incoming Webhook URL |
 
-## 🌐 Deployment (Vercel)
-
-1. Push your code to a GitHub repository
-2. Go to [vercel.com](https://vercel.com) and import your repository
-3. Add all environment variables from `.env` in the Vercel dashboard
-4. Update your GitHub App's **Webhook URL** and **Callback URL** to your Vercel deployment URL
-5. Deploy!
-
-## 🧪 Testing the Bot
-
-1. Install the GitHub App on a test repository
-2. Sign in to the dashboard
-3. Open a new Issue in the connected repository
-4. Within seconds, the bot will:
-   - Post an AI-generated summary comment on the issue
-   - Send a Slack notification to your configured channel
-   - Log the event in the dashboard
 
 ## 🔒 Security
 
