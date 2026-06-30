@@ -11,15 +11,21 @@ export default async function Dashboard() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/");
 
-  const [eventLogs, totalProcessed, totalFailed, repos] = await Promise.all([
-    prisma.eventLog.findMany({ orderBy: { createdAt: 'desc' }, take: 30, include: { actions: true } }),
-    prisma.eventLog.count({ where: { status: 'PROCESSED' } }),
-    prisma.eventLog.count({ where: { status: 'FAILED' } }),
-    prisma.repository.findMany({ where: { userId: (session.user as any).id } }),
-  ]);
+  const userId = (session.user as any).id;
 
-  const totalEvents = await prisma.eventLog.count();
-  const totalActions = await prisma.actionLog.count();
+  const [eventLogs, totalProcessed, totalFailed, repos, totalEvents, totalActions] = await Promise.all([
+    prisma.eventLog.findMany({ 
+      where: { repository: { userId } },
+      orderBy: { createdAt: 'desc' }, 
+      take: 30, 
+      include: { actions: true } 
+    }),
+    prisma.eventLog.count({ where: { status: 'PROCESSED', repository: { userId } } }),
+    prisma.eventLog.count({ where: { status: 'FAILED', repository: { userId } } }),
+    prisma.repository.findMany({ where: { userId } }),
+    prisma.eventLog.count({ where: { repository: { userId } } }),
+    prisma.actionLog.count({ where: { event: { repository: { userId } } } }),
+  ]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200">
