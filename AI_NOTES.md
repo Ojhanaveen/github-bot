@@ -2,25 +2,35 @@
 
 ## Overview
 
-This project uses the **Google Gemini API** (`gemini-2.5-flash` model) to provide AI-powered summarization of GitHub issues.
+This project uses the **Google Gemini API** (`gemini-2.5-flash` model) to provide AI-powered summarization of GitHub issues, automatically posting summaries as comments on GitHub and notifying teams via Slack.
+
+## Architecture
+
+```
+GitHub Webhook → /api/webhooks/github → /api/process-event → Gemini AI → GitHub Comment + Slack
+```
+
+The webhook handler saves events to PostgreSQL (via Supabase), then calls the process-event API synchronously (required on Vercel serverless to prevent the function from freezing before processing completes).
 
 ## How It Works
 
 When a new GitHub issue is opened, the bot:
-1. Receives the webhook event from GitHub
-2. Extracts the issue title and body text
-3. Sends a structured prompt to the Gemini API
-4. Posts the AI-generated summary as a comment on the GitHub issue
+1. Receives the webhook from GitHub at `/api/webhooks/github`
+2. Validates the HMAC-SHA256 signature (`GITHUB_WEBHOOK_SECRET`)
+3. Persists the event to the database with status `PENDING` (idempotency via `deliveryId`)
+4. Calls `/api/process-event` and **awaits** it (critical for Vercel serverless)
+5. Gemini generates a 2-3 sentence summary of the issue
+6. Bot posts the summary as a GitHub comment using the GitHub App installation token
+7. Sends a Slack notification (if `SLACK_WEBHOOK_URL` is configured)
+8. Marks the event `PROCESSED` and logs the action
 
 ## Model Used
 
-- **Model**: `gemini-2.5-flash`
+- **Model**: `gemini-2.5-flash` (overridable via `GEMINI_MODEL_NAME` env var)
 - **Library**: `@google/genai` (Google Gen AI SDK)
-- **Why this model**: The `gemini-2.5-flash` model provides fast, high-quality text generation with a generous free tier quota. It is ideal for real-time summarization tasks where low latency is important.
+- **Why**: Fast, low-latency, generous free tier — ideal for real-time summarization
 
 ## Prompt Design
-
-The prompt is kept concise and task-focused:
 
 ```
 Summarize the following GitHub issue in 2-3 concise sentences. 
@@ -31,27 +41,51 @@ Body: {issue_body}
 ```
 
 **Design decisions:**
-- **2-3 sentence limit**: Keeps summaries scannable and actionable in Slack notifications
-- **"Focus on the core problem"**: Instructs the model to avoid restating the title verbatim
-- **No few-shot examples**: The task is simple enough that zero-shot works well and reduces token cost
+- **2-3 sentence limit**: Keeps summaries scannable in Slack notifications
+- **Zero-shot**: Task is simple enough; avoids extra token cost
+- **Graceful fallback**: If Gemini fails, falls back to `"AI summarization failed due to an error."` — the GitHub comment and Slack notification still fire
 
-## Error Handling
+## Multi-Tenant Architecture
 
-The AI summarization is wrapped in a try/catch block. If the API call fails (e.g., rate limit, network error), the bot:
-1. Logs the error to the console
-2. Falls back to `"AI summarization failed due to an error."`
-3. **Still posts the GitHub comment and Slack notification** — the core workflow is not blocked by AI failures
+- Users sign in via **GitHub OAuth** (NextAuth)
+- Each user has their own scoped data — all dashboard queries filter by `userId`
+- Multiple GitHub accounts can install the bot; each gets isolated repositories and event logs
+- The GitHub App must be **installed** on a user's account/org before webhooks are received
 
-This ensures the bot remains reliable even when the AI service is temporarily unavailable.
+## Key Infrastructure Decisions
 
-## Configuration
+| Decision | Reason |
+|---|---|
+| Supabase port `6543` + `?pgbouncer=true` | Vercel only supports IPv4; PgBouncer pooler bridges the gap. Without `?pgbouncer=true`, Prisma throws `prepared statement already exists` errors |
+| `await processEventBackground()` in webhook | Vercel freezes the serverless container the instant a response is sent. Using fire-and-forget kills the AI pipeline |
+| `X-GitHub-Delivery` idempotency check | Prevents duplicate processing if GitHub retries a failed webhook delivery |
 
-The model can be overridden via the `GEMINI_MODEL_NAME` environment variable, making it easy to switch to other Gemini models (e.g., `gemini-2.0-flash`, `gemini-1.5-flash`) without code changes.
+## Deployment
+
+- **Platform**: Vercel (serverless)
+- **Database**: Supabase (PostgreSQL, connection pooler port 6543)
+- **Auth**: NextAuth with GitHub App OAuth
+- **GitHub App**: Must be set to **Public** so any GitHub account can install it
+
+## Completed Features
+
+- [x] GitHub webhook ingestion with HMAC signature verification
+- [x] Idempotent event processing via `X-GitHub-Delivery`
+- [x] Gemini AI issue summarization
+- [x] Automatic GitHub comment posting
+- [x] Slack notification (optional, configured via env var)
+- [x] NextAuth GitHub OAuth login
+- [x] Per-user data isolation on dashboard
+- [x] Installation webhook auto-registers repos to user
+- [x] Dashboard: live activity log, stats, integration status
+- [x] Landing page: setup guide, flow diagram, GitHub App install link
+- [x] Dashboard install banner when no repos connected
 
 ## Future Improvements
 
-- **Configurable prompts per repository**: Allow users to define custom prompt templates per repo
-- **PR summarization**: Summarize pull request diffs and changed files
-- **Issue classification**: Use AI to automatically apply labels (bug, feature, question)
-- **Sentiment analysis**: Detect frustration in issue descriptions and prioritize accordingly
-- **Multi-language support**: Detect and respond in the same language as the issue
+- Configurable prompts per repository via UI
+- PR diff summarization
+- AI-powered automatic label classification
+- Sentiment analysis to prioritize urgent issues
+- Multi-language support (detect and reply in issue's language)
+- In-app configuration UI (currently requires cloning repo + setting env vars)
