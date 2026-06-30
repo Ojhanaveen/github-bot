@@ -47,6 +47,8 @@ export async function POST(req: Request) {
                    })
                });
                actionDetails += "Sent Slack notification. ";
+           } else {
+               actionDetails += "Slack skipped — SLACK_WEBHOOK_URL not configured. ";
            }
        } else {
            actionDetails = `Ignored event: ${eventType}.${payload?.action}`;
