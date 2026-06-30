@@ -13,12 +13,16 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
+    async session({ session, user, token }) {
       if (session.user) {
-        session.user.id = user.id;
+        // Handle both database (user) and jwt (token) strategies
+        session.user.id = user?.id || token?.sub as string;
       }
       return session;
     }
+  },
+  session: {
+    strategy: "database", // Force database strategy since we use Prisma
   }
 }
 
