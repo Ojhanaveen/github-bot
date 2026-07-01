@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { FaCheckCircle, FaTimesCircle, FaClock, FaGithub, FaRobot, FaSlack, FaBolt, FaExternalLinkAlt, FaCode, FaDownload, FaArrowRight } from "react-icons/fa";
 import { LogoutButton } from "@/components/LogoutButton";
+import { LocalTime } from "@/components/LocalTime";
 
 export const dynamic = 'force-dynamic';
 
@@ -181,7 +182,7 @@ export default async function Dashboard() {
                             )}
                           </div>
                           <span className="text-xs text-slate-600 flex-shrink-0">
-                            {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {new Date(log.createdAt).toLocaleDateString()}
+                            <LocalTime date={log.createdAt} />
                           </span>
                         </div>
 
